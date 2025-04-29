@@ -24,9 +24,11 @@ mixin _$UserModel {
   String get email => throw _privateConstructorUsedError;
   String? get displayName => throw _privateConstructorUsedError;
   String? get photoURL => throw _privateConstructorUsedError;
+  String? get phoneNumber => throw _privateConstructorUsedError;
   bool get isEmailVerified => throw _privateConstructorUsedError;
   DateTime? get createdAt => throw _privateConstructorUsedError;
   DateTime? get lastLoginAt => throw _privateConstructorUsedError;
+  Map<String, dynamic>? get preferences => throw _privateConstructorUsedError;
 
   /// Serializes this UserModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -48,9 +50,11 @@ abstract class $UserModelCopyWith<$Res> {
       String email,
       String? displayName,
       String? photoURL,
+      String? phoneNumber,
       bool isEmailVerified,
       DateTime? createdAt,
-      DateTime? lastLoginAt});
+      DateTime? lastLoginAt,
+      Map<String, dynamic>? preferences});
 }
 
 /// @nodoc
@@ -72,9 +76,11 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
     Object? email = null,
     Object? displayName = freezed,
     Object? photoURL = freezed,
+    Object? phoneNumber = freezed,
     Object? isEmailVerified = null,
     Object? createdAt = freezed,
     Object? lastLoginAt = freezed,
+    Object? preferences = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -93,6 +99,10 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
           ? _value.photoURL
           : photoURL // ignore: cast_nullable_to_non_nullable
               as String?,
+      phoneNumber: freezed == phoneNumber
+          ? _value.phoneNumber
+          : phoneNumber // ignore: cast_nullable_to_non_nullable
+              as String?,
       isEmailVerified: null == isEmailVerified
           ? _value.isEmailVerified
           : isEmailVerified // ignore: cast_nullable_to_non_nullable
@@ -105,6 +115,10 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
           ? _value.lastLoginAt
           : lastLoginAt // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      preferences: freezed == preferences
+          ? _value.preferences
+          : preferences // ignore: cast_nullable_to_non_nullable
+              as Map<String, dynamic>?,
     ) as $Val);
   }
 }
@@ -122,9 +136,11 @@ abstract class _$$UserModelImplCopyWith<$Res>
       String email,
       String? displayName,
       String? photoURL,
+      String? phoneNumber,
       bool isEmailVerified,
       DateTime? createdAt,
-      DateTime? lastLoginAt});
+      DateTime? lastLoginAt,
+      Map<String, dynamic>? preferences});
 }
 
 /// @nodoc
@@ -144,9 +160,11 @@ class __$$UserModelImplCopyWithImpl<$Res>
     Object? email = null,
     Object? displayName = freezed,
     Object? photoURL = freezed,
+    Object? phoneNumber = freezed,
     Object? isEmailVerified = null,
     Object? createdAt = freezed,
     Object? lastLoginAt = freezed,
+    Object? preferences = freezed,
   }) {
     return _then(_$UserModelImpl(
       id: null == id
@@ -165,6 +183,10 @@ class __$$UserModelImplCopyWithImpl<$Res>
           ? _value.photoURL
           : photoURL // ignore: cast_nullable_to_non_nullable
               as String?,
+      phoneNumber: freezed == phoneNumber
+          ? _value.phoneNumber
+          : phoneNumber // ignore: cast_nullable_to_non_nullable
+              as String?,
       isEmailVerified: null == isEmailVerified
           ? _value.isEmailVerified
           : isEmailVerified // ignore: cast_nullable_to_non_nullable
@@ -177,6 +199,10 @@ class __$$UserModelImplCopyWithImpl<$Res>
           ? _value.lastLoginAt
           : lastLoginAt // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      preferences: freezed == preferences
+          ? _value._preferences
+          : preferences // ignore: cast_nullable_to_non_nullable
+              as Map<String, dynamic>?,
     ));
   }
 }
@@ -189,9 +215,12 @@ class _$UserModelImpl implements _UserModel {
       required this.email,
       this.displayName,
       this.photoURL,
+      this.phoneNumber,
       this.isEmailVerified = false,
       this.createdAt,
-      this.lastLoginAt});
+      this.lastLoginAt,
+      final Map<String, dynamic>? preferences})
+      : _preferences = preferences;
 
   factory _$UserModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$UserModelImplFromJson(json);
@@ -205,16 +234,27 @@ class _$UserModelImpl implements _UserModel {
   @override
   final String? photoURL;
   @override
+  final String? phoneNumber;
+  @override
   @JsonKey()
   final bool isEmailVerified;
   @override
   final DateTime? createdAt;
   @override
   final DateTime? lastLoginAt;
+  final Map<String, dynamic>? _preferences;
+  @override
+  Map<String, dynamic>? get preferences {
+    final value = _preferences;
+    if (value == null) return null;
+    if (_preferences is EqualUnmodifiableMapView) return _preferences;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(value);
+  }
 
   @override
   String toString() {
-    return 'UserModel(id: $id, email: $email, displayName: $displayName, photoURL: $photoURL, isEmailVerified: $isEmailVerified, createdAt: $createdAt, lastLoginAt: $lastLoginAt)';
+    return 'UserModel(id: $id, email: $email, displayName: $displayName, photoURL: $photoURL, phoneNumber: $phoneNumber, isEmailVerified: $isEmailVerified, createdAt: $createdAt, lastLoginAt: $lastLoginAt, preferences: $preferences)';
   }
 
   @override
@@ -228,18 +268,31 @@ class _$UserModelImpl implements _UserModel {
                 other.displayName == displayName) &&
             (identical(other.photoURL, photoURL) ||
                 other.photoURL == photoURL) &&
+            (identical(other.phoneNumber, phoneNumber) ||
+                other.phoneNumber == phoneNumber) &&
             (identical(other.isEmailVerified, isEmailVerified) ||
                 other.isEmailVerified == isEmailVerified) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.lastLoginAt, lastLoginAt) ||
-                other.lastLoginAt == lastLoginAt));
+                other.lastLoginAt == lastLoginAt) &&
+            const DeepCollectionEquality()
+                .equals(other._preferences, _preferences));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, email, displayName, photoURL,
-      isEmailVerified, createdAt, lastLoginAt);
+  int get hashCode => Object.hash(
+      runtimeType,
+      id,
+      email,
+      displayName,
+      photoURL,
+      phoneNumber,
+      isEmailVerified,
+      createdAt,
+      lastLoginAt,
+      const DeepCollectionEquality().hash(_preferences));
 
   /// Create a copy of UserModel
   /// with the given fields replaced by the non-null parameter values.
@@ -263,9 +316,11 @@ abstract class _UserModel implements UserModel {
       required final String email,
       final String? displayName,
       final String? photoURL,
+      final String? phoneNumber,
       final bool isEmailVerified,
       final DateTime? createdAt,
-      final DateTime? lastLoginAt}) = _$UserModelImpl;
+      final DateTime? lastLoginAt,
+      final Map<String, dynamic>? preferences}) = _$UserModelImpl;
 
   factory _UserModel.fromJson(Map<String, dynamic> json) =
       _$UserModelImpl.fromJson;
@@ -279,11 +334,15 @@ abstract class _UserModel implements UserModel {
   @override
   String? get photoURL;
   @override
+  String? get phoneNumber;
+  @override
   bool get isEmailVerified;
   @override
   DateTime? get createdAt;
   @override
   DateTime? get lastLoginAt;
+  @override
+  Map<String, dynamic>? get preferences;
 
   /// Create a copy of UserModel
   /// with the given fields replaced by the non-null parameter values.

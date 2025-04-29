@@ -13,6 +13,7 @@ class AuthService {
   AuthService(this._prefs);
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
+  User? get currentUser => _auth.currentUser;
 
   Stream<UserModel?> get userStream {
     return _auth.authStateChanges().asyncMap((user) async {
@@ -80,7 +81,10 @@ class AuthService {
   }
 
   Future<void> signOut() async {
-    await _auth.signOut();
+    await Future.wait([
+      _auth.signOut(),
+      _googleSignIn.signOut(),
+    ]);
   }
 
   Future<void> resetPassword(String email) async {
@@ -93,10 +97,14 @@ class AuthService {
     String? phoneNumber,
   }) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('User not logged in');
+    if (user == null) throw Exception('No user signed in');
 
-    await user.updateDisplayName(displayName);
-    await user.updatePhotoURL(photoURL);
+    if (displayName != null) {
+      await user.updateDisplayName(displayName);
+    }
+    if (photoURL != null) {
+      await user.updatePhotoURL(photoURL);
+    }
     if (phoneNumber != null) {
       await user.updatePhoneNumber(PhoneAuthProvider.credential(
         verificationId: '',
@@ -125,26 +133,42 @@ class AuthService {
 
   Future<UserCredential> signInWithGoogle() async {
     try {
+      // Trigger the authentication flow
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) throw Exception('Google sign in aborted');
 
+      if (googleUser == null) {
+        throw FirebaseAuthException(
+          code: 'ERROR_ABORTED_BY_USER',
+          message: 'Sign in aborted by user',
+        );
+      }
+
+      // Obtain the auth details from the request
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
+
+      // Create a new credential
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
+      // Sign in to Firebase with the credential
       final userCredential = await _auth.signInWithCredential(credential);
 
-      // Create or update user document
-      if (userCredential.user != null) {
-        await _updateUserData(userCredential.user!);
-      }
+      // Create or update user document in Firestore
+      await _firestore.collection('users').doc(userCredential.user?.uid).set({
+        'email': userCredential.user?.email,
+        'displayName': userCredential.user?.displayName,
+        'photoURL': userCredential.user?.photoURL,
+        'lastLoginAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
       return userCredential;
     } catch (e) {
-      throw Exception('Failed to sign in with Google: $e');
+      print('Google Sign In Error: $e');
+      rethrow;
     }
   }
 
@@ -172,12 +196,7 @@ class AuthService {
 
   Future<void> deleteAccount() async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('User not logged in');
-
-    // Delete user data from Firestore
-    await _firestore.collection('users').doc(user.uid).delete();
-
-    // Delete user account
+    if (user == null) throw Exception('No user signed in');
     await user.delete();
   }
 

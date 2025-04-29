@@ -4,37 +4,43 @@ import 'package:flutter/foundation.dart'
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
+    // Web configuration
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
+      return const FirebaseOptions(
+        apiKey: "AIzaSyCttaAOleONlhE-KugqfLXVMhBL4mzb00w",
+        authDomain: "calmina-dc2ac.firebaseapp.com",
+        projectId: "calmina-dc2ac",
+        storageBucket: "calmina-dc2ac.firebasestorage.app",
+        messagingSenderId: "567948546173",
+        appId: "1:567948546173:web:860b79fdd3a5d0f957a114",
       );
     }
+
+    // Desktop/Mobile configuration
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for android - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
+        return const FirebaseOptions(
+          apiKey: "AIzaSyCttaAOleONlhE-KugqfLXVMhBL4mzb00w",
+          appId: "1:567948546173:android:860b79fdd3a5d0f957a114",
+          messagingSenderId: "567948546173",
+          projectId: "calmina-dc2ac",
+          storageBucket: "calmina-dc2ac.firebasestorage.app",
         );
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
-      case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
+        return const FirebaseOptions(
+          apiKey: "AIzaSyCttaAOleONlhE-KugqfLXVMhBL4mzb00w",
+          appId: "1:567948546173:ios:860b79fdd3a5d0f957a114",
+          messagingSenderId: "567948546173",
+          projectId: "calmina-dc2ac",
+          storageBucket: "calmina-dc2ac.firebasestorage.app",
         );
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
-      case TargetPlatform.linux:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for linux - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
+        return const FirebaseOptions(
+          apiKey: "AIzaSyCttaAOleONlhE-KugqfLXVMhBL4mzb00w",
+          appId: "1:567948546173:windows:860b79fdd3a5d0f957a114",
+          messagingSenderId: "567948546173",
+          projectId: "calmina-dc2ac",
+          storageBucket: "calmina-dc2ac.firebasestorage.app",
         );
       default:
         throw UnsupportedError(

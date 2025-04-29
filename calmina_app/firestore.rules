@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is accessing their own data
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Users collection rules
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+      
+      // User preferences subcollection
+      match /preferences/{preferenceId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // Public data that any authenticated user can read
+    match /public/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if false;  // Only admins can write (configure in Firebase Console)
+    }
+
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+} 

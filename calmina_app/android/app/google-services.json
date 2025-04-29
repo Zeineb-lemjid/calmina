@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "567948546173",
+    "project_id": "calmina-dc2ac",
+    "storage_bucket": "calmina-dc2ac.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:567948546173:android:e46a36794b9d52a357a114",
+        "android_client_info": {
+          "package_name": "com.calmina.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "567948546173-a2963jkdup7kiui382ca2491d50r9l8g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.calmina.app",
+            "certificate_hash": "73d33d6ecec8aee6bfecf18320a54a5a5e8b07c5"
+          }
+        },
+        {
+          "client_id": "567948546173-6dv9sj41f4c8iaa6tfo645iivfiuftm1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAlKaEFzzDToXS-nyPMbRxvdgUC6n_XQG8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "567948546173-6dv9sj41f4c8iaa6tfo645iivfiuftm1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+} 

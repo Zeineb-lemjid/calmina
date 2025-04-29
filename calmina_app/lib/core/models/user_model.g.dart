@@ -12,6 +12,7 @@ _$UserModelImpl _$$UserModelImplFromJson(Map<String, dynamic> json) =>
       email: json['email'] as String,
       displayName: json['displayName'] as String?,
       photoURL: json['photoURL'] as String?,
+      phoneNumber: json['phoneNumber'] as String?,
       isEmailVerified: json['isEmailVerified'] as bool? ?? false,
       createdAt: json['createdAt'] == null
           ? null
@@ -19,6 +20,7 @@ _$UserModelImpl _$$UserModelImplFromJson(Map<String, dynamic> json) =>
       lastLoginAt: json['lastLoginAt'] == null
           ? null
           : DateTime.parse(json['lastLoginAt'] as String),
+      preferences: json['preferences'] as Map<String, dynamic>?,
     );
 
 Map<String, dynamic> _$$UserModelImplToJson(_$UserModelImpl instance) =>
@@ -27,7 +29,9 @@ Map<String, dynamic> _$$UserModelImplToJson(_$UserModelImpl instance) =>
       'email': instance.email,
       'displayName': instance.displayName,
       'photoURL': instance.photoURL,
+      'phoneNumber': instance.phoneNumber,
       'isEmailVerified': instance.isEmailVerified,
       'createdAt': instance.createdAt?.toIso8601String(),
       'lastLoginAt': instance.lastLoginAt?.toIso8601String(),
+      'preferences': instance.preferences,
     };

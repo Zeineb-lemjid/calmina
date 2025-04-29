@@ -4,43 +4,39 @@ import '../../../../core/widgets/loading_overlay.dart';
 import '../../../../core/widgets/error_dialog.dart';
 import '../../controllers/auth_controller.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   final _authController = Get.find<AuthController>();
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+  Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
     try {
-      await _authController.signInWithEmailAndPassword(
+      await _authController.createAccount(
         email: _emailController.text.trim(),
         password: _passwordController.text,
+        displayName: _nameController.text.trim(),
       );
-      Get.offAllNamed('/home');
-    } catch (e) {
-      ErrorDialog.show(message: e.toString());
-    }
-  }
-
-  Future<void> _handleGoogleSignIn() async {
-    try {
-      await _authController.signInWithGoogle();
       Get.offAllNamed('/home');
     } catch (e) {
       ErrorDialog.show(message: e.toString());
@@ -50,6 +46,9 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Register'),
+      ),
       body: Obx(
         () => LoadingOverlay(
           isLoading: _authController.isLoading,
@@ -66,10 +65,26 @@ class _LoginScreenState extends State<LoginScreen> {
                       const FlutterLogo(size: 100),
                       const SizedBox(height: 48),
                       TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Full Name',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.person),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your name';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
                         controller: _emailController,
                         decoration: const InputDecoration(
                           labelText: 'Email',
                           border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.email),
                         ),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
@@ -88,11 +103,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Password',
                           border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.lock),
                         ),
                         obscureText: true,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your password';
+                            return 'Please enter a password';
                           }
                           if (value.length < 6) {
                             return 'Password must be at least 6 characters';
@@ -100,27 +116,34 @@ class _LoginScreenState extends State<LoginScreen> {
                           return null;
                         },
                       ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _confirmPasswordController,
+                        decoration: const InputDecoration(
+                          labelText: 'Confirm Password',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.lock_outline),
+                        ),
+                        obscureText: true,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please confirm your password';
+                          }
+                          if (value != _passwordController.text) {
+                            return 'Passwords do not match';
+                          }
+                          return null;
+                        },
+                      ),
                       const SizedBox(height: 24),
                       ElevatedButton(
-                        onPressed: _handleLogin,
-                        child: const Text('Login'),
-                      ),
-                      const SizedBox(height: 16),
-                      OutlinedButton(
-                        onPressed: _handleGoogleSignIn,
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.login),
-                            SizedBox(width: 8),
-                            Text('Sign in with Google'),
-                          ],
-                        ),
+                        onPressed: _handleRegister,
+                        child: const Text('Register'),
                       ),
                       const SizedBox(height: 16),
                       TextButton(
-                        onPressed: () => Get.toNamed('/register'),
-                        child: const Text('Don\'t have an account? Register'),
+                        onPressed: () => Get.back(),
+                        child: const Text('Already have an account? Login'),
                       ),
                     ],
                   ),
