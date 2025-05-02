@@ -1,43 +1,50 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-part 'user_model.freezed.dart';
-part 'user_model.g.dart';
+class UserModel {
+  final String id;
+  final String email;
+  final String? displayName;
+  final String? photoURL;
+  final String? phoneNumber;
+  final bool emailVerified;
+  final DateTime? createdAt;
+  final DateTime? lastLoginAt;
 
-@freezed
-class UserModel with _$UserModel {
-  const factory UserModel({
-    required String id,
-    required String email,
-    String? displayName,
-    String? photoURL,
-    String? phoneNumber,
-    @Default(false) bool isEmailVerified,
-    DateTime? createdAt,
-    DateTime? lastLoginAt,
-    Map<String, dynamic>? preferences,
-  }) = _UserModel;
+  UserModel({
+    required this.id,
+    required this.email,
+    this.displayName,
+    this.photoURL,
+    this.phoneNumber,
+    this.emailVerified = false,
+    this.createdAt,
+    this.lastLoginAt,
+  });
 
-  factory UserModel.fromJson(Map<String, dynamic> json) =>
-      _$UserModelFromJson(json);
-
-  factory UserModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: doc.id,
-      email: data['email'] ?? '',
-      displayName: data['displayName'],
-      photoURL: data['photoURL'],
-      phoneNumber: data['phoneNumber'],
-      isEmailVerified: data['isEmailVerified'] ?? false,
-      createdAt: data['createdAt'] != null
-          ? (data['createdAt'] as Timestamp).toDate()
-          : null,
-      lastLoginAt: data['lastLoginAt'] != null
-          ? (data['lastLoginAt'] as Timestamp).toDate()
-          : null,
-      preferences: data['preferences'] as Map<String, dynamic>?,
+      id: json['id'] ?? '',
+      email: json['email'] ?? '',
+      displayName: json['displayName'],
+      photoURL: json['photoURL'],
+      phoneNumber: json['phoneNumber'],
+      emailVerified: json['emailVerified'] ?? false,
+      createdAt: json['createdAt']?.toDate(),
+      lastLoginAt: json['lastLoginAt']?.toDate(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'displayName': displayName,
+      'photoURL': photoURL,
+      'phoneNumber': phoneNumber,
+      'emailVerified': emailVerified,
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
+      'lastLoginAt': lastLoginAt != null ? Timestamp.fromDate(lastLoginAt!) : null,
+    };
   }
 }
 
@@ -48,11 +55,10 @@ extension UserModelX on UserModel {
       'displayName': displayName,
       'photoURL': photoURL,
       'phoneNumber': phoneNumber,
-      'isEmailVerified': isEmailVerified,
+      'isEmailVerified': emailVerified,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       'lastLoginAt':
           lastLoginAt != null ? Timestamp.fromDate(lastLoginAt!) : null,
-      'preferences': preferences,
     };
   }
 }

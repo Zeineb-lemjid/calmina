@@ -1,144 +1,106 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/services/auth_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'user_controller.dart';
 
 class AuthController extends GetxController {
-  final AuthService _authService;
-  final _isLoading = false.obs;
-  final _user = Rxn<User>();
-  late final UserController _userController;
+  final isLoading = false.obs;
+  final errorMessage = ''.obs;
+  final RxBool isPasswordVisible = false.obs;
+  final _authService = FirebaseAuth.instance;
 
-  AuthController(this._authService) {
-    _userController = Get.find<UserController>();
-    _user.bindStream(_authService.authStateChanges);
+  void togglePasswordVisibility() {
+    isPasswordVisible.value = !isPasswordVisible.value;
   }
 
-  bool get isLoading => _isLoading.value;
-  User? get currentUser => _user.value;
-
-  Future<void> signInWithEmailAndPassword({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> signIn(String email, String password) async {
     try {
-      _isLoading.value = true;
-      await _authService.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-    } finally {
-      _isLoading.value = false;
-    }
-  }
-
-  Future<void> signInWithGoogle() async {
-    try {
-      _isLoading.value = true;
-      await _authService.signInWithGoogle();
-    } catch (e) {
-      if (e.toString().contains('The OAuth client was not found')) {
-        Get.snackbar(
-          'Error',
-          'Google Sign-in is not properly configured. Please check Firebase Console settings.',
-          snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 5),
-        );
-      } else {
-        Get.snackbar(
-          'Error',
-          e.toString(),
-          snackPosition: SnackPosition.BOTTOM,
-        );
+      isLoading.value = true;
+      errorMessage.value = '';
+      debugPrint('Attempting to sign in with email: $email');
+      // Input validation
+      if (email.isEmpty || password.isEmpty) {
+        throw 'Please fill in all fields';
       }
+      debugPrint('Sign in successful. Getting user role...');
+      if (!GetUtils.isEmail(email)) {
+        throw 'Please enter a valid email address';
+      }
+
+      debugPrint('Attempting to sign in with email: $email');
+
+      // Sign in user
+      final userCredential = await _authService.signInWithEmailAndPassword(
+          email: email.trim(), password: password);
+
+      debugPrint('Sign in successful. Getting user role...');
+
+      // Get user role from Firestore
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user?.uid)
+          .get();
+
+      if (!userDoc.exists) {
+        throw 'User data not found';
+      }
+
+      final userData = userDoc.data()!;
+      final role = userData['role'] as String?;
+      debugPrint('User role: $role');
+      // Navigate based on role
+      if (role == 'doctor') {
+        Get.offAllNamed('/doctor-home');
+      } else {
+        Get.offAllNamed('/home');
+      }
+    } on FirebaseAuthException catch (e) {
+      debugPrint('Firebase Auth Error: ${e.code} - ${e.message}');
+      switch (e.code) {
+        case 'user-not-found':
+          errorMessage.value = 'No user found for this email.';
+          break;
+        case 'wrong-password':
+          errorMessage.value = 'Incorrect password.';
+          break;
+        case 'invalid-email':
+          errorMessage.value = 'Please enter a valid email address';
+          break;
+        case 'user-disabled':
+          errorMessage.value = 'This account has been disabled';
+          break;
+        case 'network-request-failed':
+          errorMessage.value =
+              'Network error. Please check your internet connection';
+          break;
+        default:
+          errorMessage.value = e.message ?? 'An error occurred during sign in.';
+      }
+      // Show error snackbar
+      Get.snackbar(
+        'Error',
+        errorMessage.value,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+        duration: const Duration(seconds: 3),
+      );
+      rethrow;
+    } catch (e) {
+      debugPrint('General Error during sign in: $e');
+      errorMessage.value = e.toString();
+      // Show error snackbar
+      Get.snackbar(
+        'Error',
+        errorMessage.value,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+        duration: const Duration(seconds: 3),
+      );
       rethrow;
     } finally {
-      _isLoading.value = false;
-    }
-  }
-
-  Future<void> signOut() async {
-    try {
-      _isLoading.value = true;
-      await _authService.signOut();
-    } finally {
-      _isLoading.value = false;
-    }
-  }
-
-  Future<void> resetPassword(String email) async {
-    try {
-      _isLoading.value = true;
-      await _authService.resetPassword(email);
-      Get.snackbar(
-        'Success',
-        'Password reset email sent. Please check your inbox.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      _isLoading.value = false;
-    }
-  }
-
-  Future<void> createAccount({
-    required String email,
-    required String password,
-    String? displayName,
-  }) async {
-    try {
-      _isLoading.value = true;
-      await _authService.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-        displayName: displayName,
-      );
-    } finally {
-      _isLoading.value = false;
-    }
-  }
-
-  Future<void> updateProfile({
-    String? displayName,
-    String? photoURL,
-    String? phoneNumber,
-  }) async {
-    try {
-      _isLoading.value = true;
-      await _userController.updateProfile(
-        displayName: displayName,
-        photoURL: photoURL,
-        phoneNumber: phoneNumber,
-      );
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      _isLoading.value = false;
-    }
-  }
-
-  Future<void> deleteAccount() async {
-    try {
-      _isLoading.value = true;
-      await _userController.deleteAccount();
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      _isLoading.value = false;
+      isLoading.value = false;
     }
   }
 }

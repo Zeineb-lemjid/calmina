@@ -8,7 +8,7 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
-  final SharedPreferences _prefs;
+  final Future<SharedPreferences> _prefs;
 
   AuthService(this._prefs);
 
@@ -32,63 +32,65 @@ class AuthService {
     }
   }
 
-  Future<UserCredential> signInWithEmailAndPassword({
-    required String email,
-    required String password,
-  }) async {
-    try {
-      return await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-    } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
-    }
-  }
-
-  Future<UserCredential> createUserWithEmailAndPassword({
-    required String email,
-    required String password,
-    String? displayName,
-  }) async {
+  Future<UserCredential> signUp(String email, String password) async {
     try {
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+      await _saveUserSession(userCredential.user!);
+      return userCredential;
+    } catch (e) {
+      rethrow;
+    }
+  }
 
-      // Create user profile
-      if (displayName != null) {
-        await userCredential.user?.updateDisplayName(displayName);
+  Future<UserCredential> signIn(String email, String password) async {
+    try {
+      print('Attempting to sign in user with email: $email');
+      final userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      
+      print('Sign in successful for user: ${userCredential.user?.uid}');
+      
+      // Update last login timestamp in Firestore
+      if (userCredential.user != null) {
+        await _firestore.collection('users').doc(userCredential.user!.uid).update({
+          'lastLoginAt': FieldValue.serverTimestamp(),
+        });
       }
-
-      // Send verification email
-      await userCredential.user?.sendEmailVerification();
-
-      // Create user document in Firestore
-      await _firestore.collection('users').doc(userCredential.user?.uid).set({
-        'email': email,
-        'displayName': displayName,
-        'createdAt': FieldValue.serverTimestamp(),
-        'lastLoginAt': FieldValue.serverTimestamp(),
-        'emailVerified': false,
-      });
-
+      
+      await _saveUserSession(userCredential.user!);
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
+      print('Firebase Auth Error during sign in: ${e.code} - ${e.message}');
+      throw FirebaseAuthException(
+        code: e.code,
+        message: _handleAuthException(e),
+      );
+    } catch (e) {
+      print('Unexpected error during sign in: $e');
+      rethrow;
     }
   }
 
   Future<void> signOut() async {
-    await Future.wait([
-      _auth.signOut(),
-      _googleSignIn.signOut(),
-    ]);
+    try {
+      await _auth.signOut();
+      await _clearUserSession();
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> resetPassword(String email) async {
-    await _auth.sendPasswordResetEmail(email: email);
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> updateUserProfile({
@@ -165,6 +167,7 @@ class AuthService {
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
+      await _saveUserSession(userCredential.user!);
       return userCredential;
     } catch (e) {
       print('Google Sign In Error: $e');
@@ -266,77 +269,51 @@ class AuthService {
 
   // Biometric authentication
   Future<void> enableBiometricAuth() async {
-    final user = _auth.currentUser;
-    if (user == null) throw Exception('User not logged in');
-
-    await _prefs.setBool('biometric_auth_enabled', true);
-    await _firestore.collection('users').doc(user.uid).update({
-      'biometricAuthEnabled': true,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    final prefs = await _prefs;
+    await prefs.setBool('biometric_auth_enabled', true);
   }
 
   Future<void> disableBiometricAuth() async {
-    final user = _auth.currentUser;
-    if (user == null) throw Exception('User not logged in');
-
-    await _prefs.setBool('biometric_auth_enabled', false);
-    await _firestore.collection('users').doc(user.uid).update({
-      'biometricAuthEnabled': false,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    final prefs = await _prefs;
+    await prefs.setBool('biometric_auth_enabled', false);
   }
 
   Future<bool> isBiometricAuthEnabled() async {
-    return _prefs.getBool('biometric_auth_enabled') ?? false;
+    final prefs = await _prefs;
+    return prefs.getBool('biometric_auth_enabled') ?? false;
   }
 
   // Language preferences
   Future<void> setLanguagePreference(String languageCode) async {
-    final user = _auth.currentUser;
-    if (user == null) throw Exception('User not logged in');
-
-    await _prefs.setString('language_code', languageCode);
-    await _firestore.collection('users').doc(user.uid).update({
-      'languageCode': languageCode,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    final prefs = await _prefs;
+    await prefs.setString('language_code', languageCode);
   }
 
   Future<String> getLanguagePreference() async {
-    return _prefs.getString('language_code') ?? 'en';
+    final prefs = await _prefs;
+    return prefs.getString('language_code') ?? 'en';
   }
 
   // Theme preferences
   Future<void> setThemePreference(bool isDarkMode) async {
-    final user = _auth.currentUser;
-    if (user == null) throw Exception('User not logged in');
-
-    await _prefs.setBool('dark_mode', isDarkMode);
-    await _firestore.collection('users').doc(user.uid).update({
-      'darkMode': isDarkMode,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    final prefs = await _prefs;
+    await prefs.setBool('dark_mode', isDarkMode);
   }
 
   Future<bool> getThemePreference() async {
-    return _prefs.getBool('dark_mode') ?? false;
+    final prefs = await _prefs;
+    return prefs.getBool('dark_mode') ?? false;
   }
 
   // Notification preferences
   Future<void> setNotificationPreference(bool enabled) async {
-    final user = _auth.currentUser;
-    if (user == null) throw Exception('User not logged in');
-
-    await _prefs.setBool('notifications_enabled', enabled);
-    await _firestore.collection('users').doc(user.uid).update({
-      'notificationsEnabled': enabled,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    final prefs = await _prefs;
+    await prefs.setBool('notifications_enabled', enabled);
   }
 
   Future<bool> getNotificationPreference() async {
-    return _prefs.getBool('notifications_enabled') ?? true;
+    final prefs = await _prefs;
+    return prefs.getBool('notifications_enabled') ?? true;
   }
 
   // Session management
@@ -358,5 +335,18 @@ class AuthService {
       'activeSessions': 0,
       'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  // User session management
+  Future<void> _saveUserSession(User user) async {
+    final prefs = await _prefs;
+    await prefs.setString('userId', user.uid);
+    await prefs.setString('userEmail', user.email ?? '');
+  }
+
+  Future<void> _clearUserSession() async {
+    final prefs = await _prefs;
+    await prefs.remove('userId');
+    await prefs.remove('userEmail');
   }
 }

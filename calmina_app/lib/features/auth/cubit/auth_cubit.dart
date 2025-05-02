@@ -81,7 +81,7 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       final isVerified = await _authService.isEmailVerified();
       if (!isVerified) {
-        emit(AuthState.error('Please verify your email address'));
+        emit(const AuthState.error('Please verify your email address'));
       }
     } catch (e) {
       emit(AuthState.error(e.toString()));
@@ -110,16 +110,14 @@ class AuthCubit extends Cubit<AuthState> {
         phoneNumber: phoneNumber,
       );
       final currentState = state;
-      if (currentState is AuthState) {
-        final user = currentState.maybeWhen(
-          authenticated: (user) => user,
-          orElse: () => null,
-        );
-        if (user != null) {
-          emit(AuthState.authenticated(user));
-        }
+      final user = currentState.maybeWhen(
+        authenticated: (user) => user,
+        orElse: () => null,
+      );
+      if (user != null) {
+        emit(AuthState.authenticated(user));
       }
-    } catch (e) {
+        } catch (e) {
       emit(AuthState.error(e.toString()));
     }
   }

@@ -1,26 +1,59 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/services/storage_service.dart';
+import '../../auth/controllers/auth_controller.dart';
 
 class ProfileController extends GetxController {
   final AuthService _authService;
   final StorageService _storageService;
+  final AuthController _authController;
   final _imagePicker = ImagePicker();
 
+  final Rx<User?> user = Rx<User?>(null);
+  final RxInt streakDays = 0.obs;
+  final RxInt totalMoods = 0.obs;
+  final RxInt totalMeditations = 0.obs;
+
   final isLoading = false.obs;
-  final user = Rxn();
 
   ProfileController({
     required AuthService authService,
     required StorageService storageService,
+    required AuthController authController,
   })  : _authService = authService,
-        _storageService = storageService {
-    // Listen to auth state changes
-    _authService.authStateChanges.listen((currentUser) {
-      user.value = currentUser;
-    });
+        _storageService = storageService,
+        _authController = authController;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _loadUserData();
+    _loadStats();
+  }
+
+  void _loadUserData() {
+    final currentUser = _authService.currentUser;
+    user.value = currentUser;
+  }
+
+  Future<void> _loadStats() async {
+    if (user.value != null) {
+      // Load streak days
+      final streak = await _storageService.getStreakDays(user.value!.uid);
+      streakDays.value = streak;
+
+      // Load total moods
+      final moods = await _storageService.getTotalMoods(user.value!.uid);
+      totalMoods.value = moods;
+
+      // Load total meditations
+      final meditations = await _storageService.getTotalMeditations(user.value!.uid);
+      totalMeditations.value = meditations;
+    }
   }
 
   Future<void> updateProfile({
@@ -88,7 +121,11 @@ class ProfileController extends GetxController {
     }
   }
 
-  void signOut() {
-    _authService.signOut();
+  Future<void> editProfile() async {
+    // TODO: Implement profile editing
+  }
+
+  Future<void> signOut() async {
+    await _authController.signOut();
   }
 }

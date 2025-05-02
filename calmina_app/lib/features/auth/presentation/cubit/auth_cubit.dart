@@ -47,7 +47,7 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthLoading());
       await _authService.signOut();
     } catch (e) {
-      emit(AuthError('Failed to sign out'));
+      emit(const AuthError('Failed to sign out'));
     }
   }
 
@@ -57,7 +57,7 @@ class AuthCubit extends Cubit<AuthState> {
       await _authService.resetPassword(email);
       emit(AuthInitial());
     } catch (e) {
-      emit(AuthError('Failed to reset password'));
+      emit(const AuthError('Failed to reset password'));
     }
   }
 }

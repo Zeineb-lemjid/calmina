@@ -1,9 +1,11 @@
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:io';
 import 'package:path/path.dart' as path;
 
 class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<String> uploadFile(File file, String userId, {String? folder}) async {
     try {
@@ -41,6 +43,43 @@ class StorageService {
       return urls;
     } catch (e) {
       throw Exception('Failed to list files: $e');
+    }
+  }
+
+  Future<int> getStreakDays(String userId) async {
+    try {
+      final doc = await _firestore.collection('users').doc(userId).get();
+      return doc.data()?['streakDays'] ?? 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  Future<int> getTotalMoods(String userId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('moods')
+          .count()
+          .get();
+      return snapshot.count ?? 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  Future<int> getTotalMeditations(String userId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('meditations')
+          .count()
+          .get();
+      return snapshot.count ?? 0;
+    } catch (e) {
+      return 0;
     }
   }
 }
