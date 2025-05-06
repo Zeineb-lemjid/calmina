@@ -29,7 +29,7 @@ Future<bool> initializeFirebase({int retryCount = 0}) async {
     await FirebaseFirestore.instance.clearPersistence();
     
     // Configure Firestore settings
-    FirebaseFirestore.instance.settings = Settings(
+    FirebaseFirestore.instance.settings = const Settings(
       persistenceEnabled: true,
       cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
     );
@@ -46,7 +46,7 @@ Future<bool> initializeFirebase({int retryCount = 0}) async {
     print('Firebase initialization error: $e');
     if (e.toString().contains('network') || e.toString().contains('timeout')) {
       print('Retrying initialization... Attempt ${retryCount + 1}');
-      await Future.delayed(Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 2));
       return initializeFirebase(retryCount: retryCount + 1);
     }
     return false;
